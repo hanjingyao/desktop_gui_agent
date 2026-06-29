@@ -10,6 +10,7 @@ import time
 
 import config
 from perception.screenshot import capture_screen
+from perception.ocr_recognizer import OCRRecognizer
 from control.mouse_controller import MouseController
 from control.keyboard_controller import KeyboardController
 from agent.model_client import ModelClient
@@ -36,6 +37,8 @@ def execute_action(action: dict, mouse: MouseController,
 
     if atype == "click":
         mouse.click(params["x"], params["y"])
+    elif atype == "double_click":
+        mouse.double_click(params["x"], params["y"])
     elif atype == "type":
         keyboard.type(params["text"])
     elif atype == "scroll":
@@ -66,6 +69,8 @@ def run_task(instruction: str) -> str:
     mouse = MouseController(action_delay=config.MOUSE_ACTION_DELAY)
     keyboard = KeyboardController(type_delay=config.KEYBOARD_TYPE_DELAY)
     model = ModelClient(mode=config.MODEL_MODE, model_name=config.API_MODEL_NAME)
+    print("正在加载 OCR 模型（首次较慢）...")
+    ocr = OCRRecognizer()
 
     for step in range(1, config.MAX_STEPS + 1):
         print(f"\n[步骤 {step}] 截图并请模型决策...")
@@ -75,11 +80,21 @@ def run_task(instruction: str) -> str:
     for step in range(1, config.MAX_STEPS + 1):
         print(f"\n[步骤 {step}] 截图并请模型决策...")
 
-        # a. 截屏
+# a. 截屏
         image = capture_screen()
 
-        # b. 调模型生成动作（带上历史动作，避免重复）
-        prompt = build_prompt(instruction, history)
+        # a2. OCR 识别屏幕元素及其坐标，供模型精确点击
+        elements = ocr.recognize(image)
+        # 把每个元素整理成「文字 -> 中心坐标」清单
+        elem_lines = []
+        for e in elements:
+            x1, y1, x2, y2 = e["bbox"]
+            cx, cy = (x1 + x2) // 2, (y1 + y2) // 2  # 中心点坐标
+            elem_lines.append(f'  "{e["text"]}" 中心坐标=({cx}, {cy})')
+        elements_text = "\n".join(elem_lines)
+
+        # b. 调模型生成动作（带上历史动作 + 屏幕元素坐标）
+        prompt = build_prompt(instruction, history, elements_text)
         try:
             output = model.generate(image, prompt)
         except Exception as e:

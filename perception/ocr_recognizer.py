@@ -64,8 +64,13 @@ class OCRRecognizer:
                 {"text": str, "bbox": (x1, y1, x2, y2), "confidence": float}
             识别结果为空时返回空列表。
         """
+# 大图 OCR 很慢，先缩小再识别，识别后把坐标按比例还原
+        scale = 0.5  # 缩小到一半
+        small = image.resize(
+            (int(image.width * scale), int(image.height * scale))
+        )
         try:
-            img_array = np.array(image)
+            img_array = np.array(small)
             result = self._ocr.predict(img_array)
         except Exception as e:
             logger.error("OCR 识别出错：%s", e)
@@ -76,10 +81,14 @@ class OCRRecognizer:
             texts = res.get("rec_texts", [])
             scores = res.get("rec_scores", [])
             polys = res.get("rec_polys", [])
-            for text, score, poly in zip(texts, scores, polys):
+        for text, score, poly in zip(texts, scores, polys):
+                x1, y1, x2, y2 = _poly_to_bbox(poly)
+                # 坐标按缩放比例还原到原图尺寸
+                bbox = (int(x1 / scale), int(y1 / scale),
+                        int(x2 / scale), int(y2 / scale))
                 results.append({
                     "text": text,
-                    "bbox": _poly_to_bbox(poly),
+                    "bbox": bbox,
                     "confidence": float(score),
                 })
 

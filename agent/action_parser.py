@@ -36,8 +36,9 @@ Action: 动作类型(参数)
   第三步：输入程序名后，必须用 hotkey(key1="enter") 回车启动，
           绝对不要用 click 去点搜索结果（你无法准确判断图标坐标）。
           只有在 enter 之后、确认目标程序窗口真正出现在屏幕上时，才用 finish。
-- click 只在需要点击屏幕上明确可见的图标/按钮时使用，且 x、y 必须是具体整数像素坐标，
-  绝对不能把控件名称、文字当作坐标值填入。
+- click 时，x、y 必须是具体整数像素坐标。如果上面提供了"屏幕元素及坐标清单"，
+  请从清单里找到目标元素，直接使用它的中心坐标，绝对不能把控件名称、文字当作坐标值填入。
+- 打开桌面上的文件夹或图标，用 double_click(x=整数, y=整数) 双击它的坐标。
 - type 只用于在输入框里输入内容，不能用来"打开"程序。
 - 执行操作前，先观察当前屏幕处于什么状态，再决定下一步。
 - 如果屏幕显示目标已经达成，立刻用 finish 动作结束。
@@ -50,23 +51,34 @@ Action: 动作类型(参数)
 """
 
 # 支持的动作类型白名单
-SUPPORTED_ACTIONS = {"click", "type", "scroll", "hotkey", "finish"}
+SUPPORTED_ACTIONS = {"click", "double_click", "type", "scroll", "hotkey", "finish"}
 
 
-def build_prompt(user_instruction: str, history: list | None = None) -> str:
-    """把系统提示词、历史动作与用户指令拼接成完整 prompt。
+def build_prompt(user_instruction: str, history: list | None = None,
+                 elements: str | None = None) -> str:
+    """把系统提示词、屏幕元素坐标、历史动作与用户指令拼接成完整 prompt。
 
     Args:
         user_instruction: 用户的原始指令。
         history: 已执行过的动作列表，让模型知道进展，避免重复。
+        elements: OCR 识别出的屏幕元素及坐标清单。
     """
+    elements_text = ""
+    if elements:
+        elements_text = (
+            "\n当前屏幕上识别到以下元素及其中心坐标，"
+            "需要点击某个元素时，请直接使用它对应的中心坐标（必须是整数）：\n"
+            + elements + "\n"
+        )
+
     history_text = ""
     if history:
         lines = [f"  第{i}步：{a}" for i, a in enumerate(history, 1)]
         history_text = "\n你已经执行过以下动作：\n" + "\n".join(lines) + \
             "\n请根据当前屏幕和上述历史，决定下一步。不要重复已完成的动作。\n"
 
-    return f"{SYSTEM_PROMPT}\n{history_text}\n用户指令：{user_instruction}"
+    return (f"{SYSTEM_PROMPT}\n{elements_text}{history_text}\n"
+            f"用户指令：{user_instruction}")
 
 
 def _parse_params(params_str: str) -> dict:
