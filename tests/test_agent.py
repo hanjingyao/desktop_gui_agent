@@ -21,5 +21,7 @@ def test_parse_action_no_match_returns_none():
 
 
 def test_supported_actions_set():
-    """白名单应包含 PRD 4.3.2 定义的五种动作。"""
-    assert SUPPORTED_ACTIONS == {"click", "type", "scroll", "hotkey", "finish"}
+    """白名单应包含支持的动作类型（含阶段五新增的 double_click）。"""
+    assert SUPPORTED_ACTIONS == {
+        "click", "double_click", "type", "scroll", "hotkey", "finish"
+    }

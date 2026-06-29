@@ -218,3 +218,8 @@ __marimo__/
 .streamlit/secrets.toml
 screenshot_test.png
 annotated_test.png
+test_ocr_speed.py
+verify_mouse.py
+test_api.py
+gui_agent.log
+*.png
