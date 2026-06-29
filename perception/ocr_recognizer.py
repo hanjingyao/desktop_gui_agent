@@ -47,6 +47,8 @@ class OCRRecognizer:
                 use_doc_unwarping=False,
                 use_textline_orientation=False,
                 enable_mkldnn=False,
+                text_detection_model_name="PP-OCRv5_mobile_det",
+                text_recognition_model_name="PP-OCRv5_mobile_rec",
             )
             logger.info("PaddleOCR 模型加载成功")
         except Exception as e:

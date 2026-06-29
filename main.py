@@ -83,17 +83,16 @@ def run_task(instruction: str) -> str:
 # a. 截屏
         image = capture_screen()
 
-        # a2. OCR 识别屏幕元素及其坐标，供模型精确点击
+        # a2. OCR 识别屏幕元素及坐标，供模型精确点击
         elements = ocr.recognize(image)
-        # 把每个元素整理成「文字 -> 中心坐标」清单
         elem_lines = []
         for e in elements:
             x1, y1, x2, y2 = e["bbox"]
-            cx, cy = (x1 + x2) // 2, (y1 + y2) // 2  # 中心点坐标
+            cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
             elem_lines.append(f'  "{e["text"]}" 中心坐标=({cx}, {cy})')
         elements_text = "\n".join(elem_lines)
 
-        # b. 调模型生成动作（带上历史动作 + 屏幕元素坐标）
+        # b. 调模型生成动作（带历史 + 屏幕元素坐标清单）
         prompt = build_prompt(instruction, history, elements_text)
         try:
             output = model.generate(image, prompt)

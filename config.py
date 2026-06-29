@@ -6,7 +6,7 @@
 
 # ---------- 模型配置（PRD 4.3.1） ----------
 MODEL_MODE = "api"              # 'api' 或 'local'
-API_MODEL_NAME = "qwen-vl-plus"  # API 模式使用的视觉模型
+API_MODEL_NAME = "qwen3-vl-plus"  # API 模式使用的视觉模型
 
 # ---------- 流程控制配置（PRD 4.4.1） ----------
 MAX_STEPS = 10        # 单个任务最大执行步数
