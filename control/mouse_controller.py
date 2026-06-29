@@ -41,6 +41,8 @@ class MouseController:
         Raises:
             ControlError: 坐标为负等非法值时抛出。
         """
+        if not isinstance(x, int) or not isinstance(y, int):
+            raise ControlError(f"坐标必须是整数：({x}, {y})")
         if x < 0 or y < 0:
             raise ControlError(f"坐标非法：({x}, {y})")
         try:
